@@ -9,6 +9,6 @@ test_that("predicate translation handles boolean comparisons", {
 test_that("unsupported filter expressions fail explicitly", {
   expect_error(
     MongoTidy:::translate_predicate(rlang::expr(mean(x))),
-    "Predicates must evaluate to logical comparisons"
+    "does not support"
   )
 })

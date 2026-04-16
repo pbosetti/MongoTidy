@@ -4,23 +4,83 @@ A native tidy lazy backend for MongoDB in R.
 
 ## Overview
 
-`mongo-tidy` is a proposed R package that provides a `dplyr`-style interface for analytical querying of MongoDB collections, using `mongolite` as the execution layer.
+`mongo-tidy` provides a disciplined `dplyr`-style interface for read-only analytical MongoDB queries. Queries stay lazy, compile into MongoDB aggregation pipelines, and only execute at `collect()`.
 
-The package is inspired by the lazy-query model familiar from `dbplyr`, but it is **not** intended to extend `dbplyr`, emulate SQL, or force MongoDB into a relational abstraction. Instead, it aims to provide a MongoDB-native backend that translates a disciplined subset of `dplyr` pipelines into MongoDB aggregation pipelines.
+The package is intentionally conservative:
 
-The main purpose is to let users write code such as:
+- it targets MongoDB aggregation pipelines directly,
+- it does not emulate SQL or extend `dbplyr`,
+- it fails explicitly for unsupported semantics,
+- it avoids silent client-side fallback.
+
+## Current implemented subset
+
+### Core objects and terminals
+
+- `mongo_src()`
+- `tbl_mongo()`
+- `collect()`
+- `show_query()`
+- `schema_fields()`
+
+### Supported verbs
+
+- `filter()`
+- `select()`
+- `rename()`
+- `mutate()`
+- `transmute()`
+- `arrange()`
+- `group_by()`
+- `summarise()`
+- `slice_head()`
+- `head()`
+
+### Supported expressions
+
+- field references, including backticked dot paths such as `` `user.age` ``,
+- scalar literals,
+- comparison operators,
+- boolean operators,
+- arithmetic operators,
+- `abs()`, `sqrt()`, `log()`, `exp()`, `round()`,
+- `if_else()`,
+- `case_when()`,
+- `is.na()`,
+- `n()`, `sum()`, `mean()`, `min()`, `max()`.
+
+### Current limits
+
+- `select()` and `rename()` currently support only explicit bare field names,
+- `mutate()` and `transmute()` require named expressions,
+- `group_by()` supports bare field names only,
+- `summarise()` supports only the documented aggregate functions,
+- joins, window functions, `across()`, reshaping, and write operations are out of scope.
+
+## Example
 
 ```r
-tbl_mongo(conn, "collection") |>
-  filter(x > 0, category != "A") |>
-  mutate(z = x * 2) |>
-  group_by(group) |>
-  summarise(n = n(), avg_z = mean(z, na.rm = TRUE)) |>
-  arrange(group) |>
-  collect()
+library(MongoTidy)
+library(dplyr)
+
+orders <- tbl_mongo(
+  collection = mongolite::mongo(collection = "orders", db = "analytics"),
+  schema = c("customer", "amount", "status")
+)
+
+query <- orders |>
+  filter(status == "paid", amount > 0) |>
+  mutate(double_amount = amount * 2) |>
+  group_by(customer) |>
+  summarise(total = sum(double_amount), n = n()) |>
+  arrange(desc(total)) |>
+  slice_head(n = 10)
+
+show_query(query)
+result <- collect(query)
 ```
 
-without manually building JSON queries.
+When field metadata is not discoverable from the collection object, pass `schema = ...` to `tbl_mongo()` so that projection and rename operations can stay explicit and lazy.
 
 ---
 
@@ -52,49 +112,19 @@ MongoDB documents are not rectangular SQL tables. Nested fields, arrays, missing
 
 ---
 
-## MVP Scope
+## Support matrix
 
-The first usable version should support a clear, documented subset of read-only analytical workflows.
-
-### Core objects and terminal operations
-- `tbl_mongo()`
-- `collect()`
-- `show_query()`
-
-### Core verbs
-- `filter()`
-- `select()`
-- `rename()`
-- `mutate()`
-- `transmute()`
-- `arrange()`
-- `group_by()`
-- `summarise()`
-- `slice_head()` or equivalent limit support
-- `head()`
-
-### Initial expression support
-- column references,
-- literals,
-- comparison operators,
-- boolean operators,
-- arithmetic operators,
-- simple scalar numeric functions,
-- `if_else()`,
-- `case_when()`,
-- `is.na()`,
-- basic aggregation functions.
-
-### Out of scope for MVP
-- joins,
-- window functions,
-- rowwise operations,
-- arbitrary list-column manipulation,
-- tidyr-style reshaping,
-- automatic unnesting,
-- write/update/delete operations,
-- DBI backend support,
-- silent client-side fallback.
+| Capability | Status | Notes |
+| --- | --- | --- |
+| Lazy query state | Supported | Verbs update internal IR only |
+| Pipeline inspection | Supported | `show_query()` renders compiled JSON |
+| Flat-field filters | Supported | Uses `$match` + `$expr` |
+| Projection and rename | Supported with caveats | Explicit bare field names only |
+| Scalar mutation | Supported | Conservative expression subset |
+| Grouped summaries | Supported | `n()`, `sum()`, `mean()`, `min()`, `max()` |
+| Dot-path fields | Supported with caveats | Use backticked names such as `` `user.age` `` |
+| Joins/window functions | Not supported | Explicitly out of scope |
+| Client-side fallback | Not supported | Unsupported features error clearly |
 
 ---
 
@@ -266,4 +296,4 @@ A first usable experimental release is complete when:
 
 ## Status
 
-This repository currently contains planning documents only. Implementation should follow the architecture and task decomposition described in `AGENTS.md`.
+The repository now includes an initial package implementation aligned with `PLAN.md` and `AGENTS.md`: lazy query objects, translation modules, pipeline compilation, query inspection, and a focused `testthat` suite. The remaining work is mainly hardening semantics, expanding fixtures, and refining documentation.

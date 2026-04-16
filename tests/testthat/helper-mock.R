@@ -117,8 +117,8 @@ eval_expr <- function(expr, data) {
 
   switch(
     op,
-    `$eq` = eval_expr(args[[1]], data) == eval_expr(args[[2]], data),
-    `$ne` = eval_expr(args[[1]], data) != eval_expr(args[[2]], data),
+    `$eq` = compare_expr(eval_expr(args[[1]], data), eval_expr(args[[2]], data), function(a, b) a == b),
+    `$ne` = compare_expr(eval_expr(args[[1]], data), eval_expr(args[[2]], data), function(a, b) a != b),
     `$gt` = eval_expr(args[[1]], data) > eval_expr(args[[2]], data),
     `$gte` = eval_expr(args[[1]], data) >= eval_expr(args[[2]], data),
     `$lt` = eval_expr(args[[1]], data) < eval_expr(args[[2]], data),
@@ -135,10 +135,20 @@ eval_expr <- function(expr, data) {
     `$ln` = log(eval_expr(args[[1]], data)),
     `$exp` = exp(eval_expr(args[[1]], data)),
     `$round` = round(eval_expr(args[[1]], data), args[[2]]),
-    `$cond` = ifelse(eval_expr(args$`if`, data), eval_expr(args$then, data), eval_expr(args$else, data)),
+    `$cond` = ifelse(eval_expr(args$`if`, data), eval_expr(args$then, data), eval_expr(args$`else`, data)),
     `$switch` = eval_switch(args, data),
     stop("Unsupported expression in test executor: ", op, call. = FALSE)
   )
+}
+
+compare_expr <- function(lhs, rhs, comparator) {
+  if (is.null(rhs)) {
+    return(is.na(lhs))
+  }
+  if (is.null(lhs)) {
+    return(is.na(rhs))
+  }
+  comparator(lhs, rhs)
 }
 
 eval_switch <- function(spec, data) {
@@ -152,16 +162,20 @@ eval_switch <- function(spec, data) {
 }
 
 resolve_field <- function(data, path) {
-  parts <- strsplit(path, "\.", fixed = FALSE)[[1]]
+  if (path %in% names(data)) {
+    return(data[[path]])
+  }
+
+  parts <- strsplit(path, ".", fixed = TRUE)[[1]]
   value <- data[[parts[[1]]]]
   if (length(parts) == 1) {
     return(value)
   }
 
   for (part in parts[-1]) {
-    value <- vapply(value, function(item) {
+    value <- sapply(value, function(item) {
       if (is.list(item) && !is.null(item[[part]])) item[[part]] else NA
-    }, FUN.VALUE = logical(1))
+    }, simplify = TRUE, USE.NAMES = FALSE)
   }
   value
 }

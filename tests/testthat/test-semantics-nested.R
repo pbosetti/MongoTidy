@@ -17,6 +17,6 @@ test_that("show_query renders stable JSON", {
 
   rendered <- show_query(tbl)
 
-  expect_match(rendered, '\$addFields')
-  expect_match(rendered, '\$project')
+  expect_match(rendered, "\\$addFields")
+  expect_match(rendered, "\\$project")
 })

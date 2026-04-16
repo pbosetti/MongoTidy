@@ -1,5 +1,14 @@
-#' @importFrom dplyr group_by
+#' Group a lazy Mongo query
+#'
+#' @param .data A `tbl_mongo` object.
+#' @param ... Bare field names.
+#' @param .add Whether to add to existing groups.
+#' @param .drop Included for dplyr compatibility.
+#'
+#' @return A modified `tbl_mongo` object.
+#' @rdname mongo_group_by
 #' @export
+#' @exportS3Method dplyr::group_by
 group_by.tbl_mongo <- function(.data, ..., .add = FALSE, .drop = dplyr::group_by_drop_default(.data)) {
   quos <- rlang::enquos(...)
   groups <- vapply(quos, function(quo) {
@@ -17,8 +26,17 @@ group_by.tbl_mongo <- function(.data, ..., .add = FALSE, .drop = dplyr::group_by
   update_ir(.data, groups = groups)
 }
 
-#' @importFrom dplyr summarise
+#' Summarise a lazy Mongo query
+#'
+#' @param .data A `tbl_mongo` object.
+#' @param ... Named summary expressions.
+#' @param .by Unsupported.
+#' @param .groups Included for dplyr compatibility.
+#'
+#' @return A modified `tbl_mongo` object.
+#' @rdname mongo_summarise
 #' @export
+#' @exportS3Method dplyr::summarise
 summarise.tbl_mongo <- function(.data, ..., .by = NULL, .groups = NULL) {
   if (!is.null(.by)) {
     abort_unsupported("summarise()", .by, ".by is not supported.")

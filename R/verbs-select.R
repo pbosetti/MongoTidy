@@ -14,16 +14,30 @@ parse_projection <- function(quos, context = "select()") {
   as_named_character(unlist(specs, use.names = TRUE))
 }
 
-#' @importFrom dplyr select
+#' Select fields from a lazy Mongo query
+#'
+#' @param .data A `tbl_mongo` object.
+#' @param ... Bare field names or `new_name = old_name` renames.
+#'
+#' @return A modified `tbl_mongo` object.
+#' @rdname mongo_select
 #' @export
+#' @exportS3Method dplyr::select
 select.tbl_mongo <- function(.data, ...) {
   quos <- rlang::enquos(...)
   projection <- parse_projection(quos, context = "select()")
   update_ir(.data, projection = projection)
 }
 
-#' @importFrom dplyr rename
+#' Rename fields in a lazy Mongo query
+#'
+#' @param .data A `tbl_mongo` object.
+#' @param ... Named bare field renames.
+#'
+#' @return A modified `tbl_mongo` object.
+#' @rdname mongo_rename
 #' @export
+#' @exportS3Method dplyr::rename
 rename.tbl_mongo <- function(.data, ...) {
   quos <- rlang::enquos(...)
   rename_specs <- parse_projection(quos, context = "rename()")

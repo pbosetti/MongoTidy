@@ -38,7 +38,11 @@ new_tbl_mongo <- function(src, ir) {
 
 #' @keywords internal
 update_ir <- function(x, ...) {
-  ir <- utils::modifyList(x$ir, list(...))
+  updates <- list(...)
+  ir <- x$ir
+  for (name in names(updates)) {
+    ir[[name]] <- updates[[name]]
+  }
   new_tbl_mongo(x$src, ir)
 }
 

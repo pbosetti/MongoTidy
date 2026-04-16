@@ -130,7 +130,7 @@ compile_mongo_expr <- function(expr) {
     if_else = list(`$cond` = list(
       `if` = compile_mongo_expr(expr$condition),
       then = compile_mongo_expr(expr$true),
-      else = compile_mongo_expr(expr$false)
+      `else` = compile_mongo_expr(expr$false)
     )),
     case_when = list(`$switch` = list(
       branches = lapply(expr$cases, function(branch) {

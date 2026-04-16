@@ -8,8 +8,8 @@ test_that("tbl_mongo initializes inspectable IR", {
 })
 
 test_that("rename requires known fields", {
-  collection <- mock_collection(tibble::tibble(x = 1:3))
-  tbl <- tbl_mongo(collection, executor = function(pipeline, ...) run_pipeline(collection$data, pipeline))
+  collection <- list(name = "unknown_fields")
+  tbl <- tbl_mongo(collection, executor = function(pipeline, ...) tibble::tibble())
 
   expect_error(dplyr::rename(tbl, z = x), "requires known fields")
 })

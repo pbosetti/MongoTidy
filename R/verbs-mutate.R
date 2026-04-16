@@ -9,8 +9,15 @@ append_projection_fields <- function(projection, fields) {
   as_named_character(projection)
 }
 
-#' @importFrom dplyr mutate
+#' Add computed fields to a lazy Mongo query
+#'
+#' @param .data A `tbl_mongo` object.
+#' @param ... Named scalar expressions.
+#'
+#' @return A modified `tbl_mongo` object.
+#' @rdname mongo_mutate
 #' @export
+#' @exportS3Method dplyr::mutate
 mutate.tbl_mongo <- function(.data, ...) {
   quos <- rlang::enquos(...)
   if (!length(quos)) {
@@ -28,8 +35,15 @@ mutate.tbl_mongo <- function(.data, ...) {
   update_ir(.data, computed = c(.data$ir$computed, translated), projection = projection)
 }
 
-#' @importFrom dplyr transmute
+#' Compute and keep only derived fields
+#'
+#' @param .data A `tbl_mongo` object.
+#' @param ... Named scalar expressions.
+#'
+#' @return A modified `tbl_mongo` object.
+#' @rdname mongo_transmute
 #' @export
+#' @exportS3Method dplyr::transmute
 transmute.tbl_mongo <- function(.data, ...) {
   quos <- rlang::enquos(...)
   if (!length(quos)) {
