@@ -1,6 +1,6 @@
 Package: MongoTidy
 Title: Native Lazy Analytical Backend for MongoDB
-Version: 0.0.0.9000
+Version: 0.0.1
 Authors@R: person(given = "Paolo", family = "Bosetti", role = c("aut", "cre"), email = "paolo.bosetti@unitn.it")
 Description: Provides a disciplined, lazy subset of dplyr semantics for
     MongoDB aggregation pipelines. Queries remain lazy until collect() and
@@ -8,15 +8,19 @@ Description: Provides a disciplined, lazy subset of dplyr semantics for
 License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.3.1
+RoxygenNote: 7.3.2
 Depends: 
     R (>= 4.2.0)
 Imports:
     cli,
     dplyr,
+    mongolite,
     jsonlite,
     rlang,
     tibble
 Suggests:
+    knitr,
+    rmarkdown,
     testthat (>= 3.0.0)
+VignetteBuilder: knitr
 Config/testthat/edition: 3
