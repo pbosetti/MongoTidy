@@ -296,4 +296,4 @@ A first usable experimental release is complete when:
 
 ## Status
 
-The repository now includes an initial package implementation aligned with `PLAN.md` and `AGENTS.md`: lazy query objects, translation modules, pipeline compilation, query inspection, and a focused `testthat` suite. The remaining work is mainly hardening semantics, expanding fixtures, and refining documentation.
+The repository is at the initial planning stage. The first technical spike will focus on demonstrating direct translation of a simple hard-coded pipeline and execution against a test collection.
